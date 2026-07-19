@@ -1,50 +1,512 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>테스트 페이지</title>
-  <style>
-    body {
-      font-family: 'Malgun Gothic', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #f5f5f5;
-    }
-    .box {
-      text-align: center;
-      padding: 40px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    h1 {
-      color: #2c3e50;
-    }
-    button {
-      margin-top: 16px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      background-color: #3498db;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #2980b9;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Driving Simulator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #87ceeb;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+#info {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    background: rgba(0,0,0,.7);
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    line-height: 1.7;
+}
+
+#controls {
+    position: fixed;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+}
+
+button {
+    width: 70px;
+    height: 60px;
+    border: none;
+    border-radius: 15px;
+    background: rgba(0,0,0,.7);
+    color: white;
+    font-size: 24px;
+    touch-action: none;
+}
+
+button:active {
+    background: #2563eb;
+}
+
+#speed {
+    font-size: 22px;
+    font-weight: bold;
+}
+</style>
 </head>
+
 <body>
-  <div class="box">
-    <h1>테스트 페이지</h1>
-    <p>이 파일이 정상적으로 열리면 성공이에요!</p>
-    <button onclick="document.getElementById('msg').innerText='버튼이 잘 눌렸어요 🎉'">눌러보기</button>
-    <p id="msg"></p>
-  </div>
+
+<canvas id="game"></canvas>
+
+<div id="info">
+    🚗 CAR SIMULATOR<br>
+    속도: <span id="speed">0</span> km/h<br>
+    조작: 방향키 / WASD
+</div>
+
+<div id="controls">
+    <button id="left">⬅️</button>
+    <button id="up">⬆️</button>
+    <button id="down">⬇️</button>
+    <button id="right">➡️</button>
+</div>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+resize();
+window.addEventListener("resize", resize);
+
+
+/* 키 입력 */
+
+const keys = {};
+
+window.addEventListener("keydown", e => {
+    keys[e.key.toLowerCase()] = true;
+});
+
+window.addEventListener("keyup", e => {
+    keys[e.key.toLowerCase()] = false;
+});
+
+
+/* 모바일 버튼 */
+
+function buttonControl(id, key) {
+
+    const button = document.getElementById(id);
+
+    button.addEventListener("pointerdown", () => {
+        keys[key] = true;
+    });
+
+    button.addEventListener("pointerup", () => {
+        keys[key] = false;
+    });
+
+    button.addEventListener("pointerleave", () => {
+        keys[key] = false;
+    });
+}
+
+buttonControl("left", "arrowleft");
+buttonControl("right", "arrowright");
+buttonControl("up", "arrowup");
+buttonControl("down", "arrowdown");
+
+
+/* 자동차 */
+
+const car = {
+
+    x: 0,
+    speed: 0,
+    angle: 0
+
+};
+
+
+/* 도로 */
+
+let roadOffset = 0;
+
+
+/* 나무 */
+
+const trees = [];
+
+for (let i = 0; i < 40; i++) {
+
+    trees.push({
+
+        x: Math.random() < .5
+            ? -Math.random() * 400 - 100
+            : Math.random() * 400 + 100,
+
+        z: Math.random() * 2000
+
+    });
+
+}
+
+
+/* 게임 업데이트 */
+
+function update() {
+
+    if (keys["arrowup"] || keys["w"]) {
+
+        car.speed += 0.15;
+
+    }
+
+    else if (keys["arrowdown"] || keys["s"]) {
+
+        car.speed -= 0.25;
+
+    }
+
+    else {
+
+        car.speed *= 0.98;
+
+    }
+
+
+    car.speed = Math.max(-5, Math.min(15, car.speed));
+
+
+    if (keys["arrowleft"] || keys["a"]) {
+
+        car.angle -= 0.04;
+
+    }
+
+    if (keys["arrowright"] || keys["d"]) {
+
+        car.angle += 0.04;
+
+    }
+
+
+    roadOffset += car.speed;
+
+
+    document.getElementById("speed").textContent =
+        Math.max(0, Math.round(car.speed * 10));
+
+
+    trees.forEach(tree => {
+
+        tree.z -= car.speed * 5;
+
+        if (tree.z < 10) {
+
+            tree.z = 2000;
+
+        }
+
+    });
+
+}
+
+
+/* 하늘 */
+
+function drawSky() {
+
+    const gradient =
+        ctx.createLinearGradient(0, 0, 0, canvas.height);
+
+    gradient.addColorStop(0, "#60a5fa");
+    gradient.addColorStop(1, "#dbeafe");
+
+    ctx.fillStyle = gradient;
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+}
+
+
+/* 도로 */
+
+function drawRoad() {
+
+    const center =
+        canvas.width / 2 + car.angle * 300;
+
+    const horizon =
+        canvas.height * .42;
+
+    ctx.fillStyle = "#4ade80";
+
+    ctx.fillRect(
+        0,
+        horizon,
+        canvas.width,
+        canvas.height
+    );
+
+
+    ctx.fillStyle = "#444";
+
+    ctx.beginPath();
+
+    ctx.moveTo(center - 80, horizon);
+
+    ctx.lineTo(center + 80, horizon);
+
+    ctx.lineTo(canvas.width * .9, canvas.height);
+
+    ctx.lineTo(canvas.width * .1, canvas.height);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 도로 중앙선 */
+
+    ctx.strokeStyle = "#facc15";
+
+    ctx.lineWidth = 8;
+
+    ctx.setLineDash([40, 40]);
+
+    ctx.lineDashOffset = -roadOffset * 5;
+
+    ctx.beginPath();
+
+    ctx.moveTo(center, horizon);
+
+    ctx.lineTo(canvas.width / 2, canvas.height);
+
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+
+    /* 도로 가장자리 */
+
+    ctx.strokeStyle = "white";
+
+    ctx.lineWidth = 8;
+
+    ctx.beginPath();
+
+    ctx.moveTo(center - 80, horizon);
+
+    ctx.lineTo(canvas.width * .1, canvas.height);
+
+    ctx.moveTo(center + 80, horizon);
+
+    ctx.lineTo(canvas.width * .9, canvas.height);
+
+    ctx.stroke();
+
+}
+
+
+/* 나무 */
+
+function drawTrees() {
+
+    const center =
+        canvas.width / 2 + car.angle * 300;
+
+    const horizon =
+        canvas.height * .42;
+
+    trees.forEach(tree => {
+
+        const scale =
+            1000 / tree.z;
+
+        const x =
+            center + tree.x * scale;
+
+        const y =
+            horizon + 1000 * scale;
+
+        const size =
+            80 * scale;
+
+        if (x < -100 || x > canvas.width + 100) return;
+
+        ctx.fillStyle = "#7c3f20";
+
+        ctx.fillRect(
+            x - size * .1,
+            y - size,
+            size * .2,
+            size
+        );
+
+        ctx.fillStyle = "#166534";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            y - size,
+            size * .7,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+
+    });
+
+}
+
+
+/* 자동차 */
+
+function drawCar() {
+
+    const x =
+        canvas.width / 2;
+
+    const y =
+        canvas.height * .78;
+
+
+    ctx.save();
+
+    ctx.translate(x, y);
+
+    ctx.rotate(car.angle * .3);
+
+
+    /* 그림자 */
+
+    ctx.fillStyle = "rgba(0,0,0,.3)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        0,
+        35,
+        100,
+        25,
+        0,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+
+    /* 자동차 본체 */
+
+    ctx.fillStyle = "#dc2626";
+
+    ctx.beginPath();
+
+    ctx.roundRect(
+        -75,
+        -30,
+        150,
+        80,
+        20
+    );
+
+    ctx.fill();
+
+
+    /* 차 지붕 */
+
+    ctx.fillStyle = "#991b1b";
+
+    ctx.beginPath();
+
+    ctx.moveTo(-50, -30);
+
+    ctx.lineTo(-30, -75);
+
+    ctx.lineTo(30, -75);
+
+    ctx.lineTo(50, -30);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 유리 */
+
+    ctx.fillStyle = "#bae6fd";
+
+    ctx.fillRect(
+        -25,
+        -60,
+        50,
+        28
+    );
+
+
+    /* 바퀴 */
+
+    ctx.fillStyle = "#111";
+
+    ctx.fillRect(-65, 30, 25, 20);
+
+    ctx.fillRect(40, 30, 25, 20);
+
+
+    ctx.restore();
+
+}
+
+
+/* 게임 루프 */
+
+function gameLoop() {
+
+    update();
+
+    drawSky();
+
+    drawRoad();
+
+    drawTrees();
+
+    drawCar();
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+gameLoop();
+
+</script>
+
 </body>
 </html>
