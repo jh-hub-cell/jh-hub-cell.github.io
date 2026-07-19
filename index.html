@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Car Driving Simulator</title>
+<title>끝말잇기</title>
 
 <style>
 * {
@@ -12,499 +12,723 @@
 
 body {
     margin: 0;
-    overflow: hidden;
-    background: #87ceeb;
     font-family: Arial, sans-serif;
+    background: #f3f4f6;
+    color: #111827;
 }
 
-canvas {
-    display: block;
-    width: 100vw;
-    height: 100vh;
-}
-
-#info {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 10;
-    background: rgba(0,0,0,.7);
+header {
+    background: #111827;
     color: white;
-    padding: 15px;
-    border-radius: 12px;
-    line-height: 1.7;
+    text-align: center;
+    padding: 28px 20px;
 }
 
-#controls {
-    position: fixed;
-    bottom: 25px;
-    left: 50%;
-    transform: translateX(-50%);
+header h1 {
+    margin: 0 0 8px;
+}
+
+.container {
+    max-width: 700px;
+    margin: 25px auto;
+    padding: 15px;
+}
+
+.status {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+#turn {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#lastWord {
+    font-size: 30px;
+    color: #2563eb;
+    margin-top: 10px;
+}
+
+.input-area {
     display: flex;
-    gap: 12px;
-    z-index: 10;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+input {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 18px;
 }
 
 button {
-    width: 70px;
-    height: 60px;
     border: none;
-    border-radius: 15px;
-    background: rgba(0,0,0,.7);
-    color: white;
-    font-size: 24px;
-    touch-action: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
 }
 
-button:active {
+#submitBtn {
+    padding: 0 25px;
     background: #2563eb;
+    color: white;
 }
 
-#speed {
-    font-size: 22px;
+#restartBtn {
+    padding: 14px 20px;
+    background: #64748b;
+    color: white;
+}
+
+.message {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    min-height: 50px;
+}
+
+.words {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.word-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.word {
+    background: #dbeafe;
+    padding: 8px 12px;
+    border-radius: 20px;
+}
+
+#loading {
+    color: #2563eb;
     font-weight: bold;
+}
+
+.rules {
+    margin-top: 20px;
+    color: #6b7280;
+    line-height: 1.8;
+    font-size: 14px;
+}
+
+@media (max-width: 600px) {
+    .input-area {
+        flex-direction: column;
+    }
+
+    #submitBtn {
+        padding: 14px;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="game"></canvas>
+<header>
+    <h1>🔤 끝말잇기</h1>
+    <p>나 vs 컴퓨터</p>
+</header>
 
-<div id="info">
-    🚗 CAR SIMULATOR<br>
-    속도: <span id="speed">0</span> km/h<br>
-    조작: 방향키 / WASD
-</div>
+<div class="container">
 
-<div id="controls">
-    <button id="left">⬅️</button>
-    <button id="up">⬆️</button>
-    <button id="down">⬇️</button>
-    <button id="right">➡️</button>
+    <div id="loading" class="status">
+        📚 단어 사전 불러오는 중...
+    </div>
+
+    <div class="status">
+
+        <div id="turn">
+            단어를 입력하세요
+        </div>
+
+        <div id="lastWord">
+            -
+        </div>
+
+    </div>
+
+    <div class="input-area">
+
+        <input
+            id="wordInput"
+            placeholder="단어 입력"
+            autocomplete="off"
+            disabled
+        >
+
+        <button
+            id="submitBtn"
+            disabled
+        >
+            입력
+        </button>
+
+    </div>
+
+    <div
+        id="message"
+        class="message"
+    >
+        단어를 불러오는 중입니다.
+    </div>
+
+    <div class="words">
+
+        <h3>📚 사용한 단어</h3>
+
+        <div
+            id="wordList"
+            class="word-list"
+        ></div>
+
+    </div>
+
+    <br>
+
+    <button
+        id="restartBtn"
+    >
+        🔄 다시 시작
+    </button>
+
+    <div class="rules">
+
+        <b>게임 규칙</b><br>
+        • 국어 단어 목록에 있는 단어만 사용합니다.<br>
+        • 이미 사용한 단어는 사용할 수 없습니다.<br>
+        • 두음법칙을 적용합니다.<br>
+        • 한방 단어도 허용합니다.<br>
+
+    </div>
+
 </div>
 
 <script>
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+/* =========================
+   설정
+========================= */
 
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+const WORD_FILE = "wordslist.txt";
+
+
+/* =========================
+   게임 변수
+========================= */
+
+let words = [];
+
+let wordSet = new Set();
+
+let usedWords = new Set();
+
+let lastWord = "";
+
+let gameOver = false;
+
+
+/* =========================
+   HTML
+========================= */
+
+const input =
+document.getElementById("wordInput");
+
+const submitBtn =
+document.getElementById("submitBtn");
+
+const restartBtn =
+document.getElementById("restartBtn");
+
+const message =
+document.getElementById("message");
+
+const turn =
+document.getElementById("turn");
+
+const lastWordText =
+document.getElementById("lastWord");
+
+const wordList =
+document.getElementById("wordList");
+
+const loading =
+document.getElementById("loading");
+
+
+/* =========================
+   단어 목록 불러오기
+========================= */
+
+async function loadWords() {
+
+    try {
+
+        const response =
+        await fetch(WORD_FILE);
+
+        if (!response.ok) {
+
+            throw new Error(
+                "단어 파일을 불러올 수 없습니다."
+            );
+
+        }
+
+        const text =
+        await response.text();
+
+
+        words = text
+
+            .split(/\r?\n/)
+
+            .map(word => word.trim())
+
+            .filter(word => {
+
+                return /^[가-힣]+$/.test(word)
+                && word.length >= 2;
+
+            });
+
+
+        wordSet =
+        new Set(words);
+
+
+        loading.textContent =
+        `📚 ${words.length.toLocaleString()}개의 단어를 불러왔습니다.`;
+
+        input.disabled = false;
+
+        submitBtn.disabled = false;
+
+        turn.textContent =
+        "👤 당신의 차례입니다.";
+
+        message.textContent =
+        "첫 단어를 입력하세요.";
+
+        input.focus();
+
+
+    } catch (error) {
+
+        loading.textContent =
+        "❌ 단어 파일을 불러오지 못했습니다.";
+
+        message.textContent =
+        "wordslist.txt가 index.html과 같은 폴더에 있는지 확인하세요.";
+
+        console.error(error);
+
+    }
+
 }
 
-resize();
-window.addEventListener("resize", resize);
 
+/* =========================
+   두음법칙
+========================= */
 
-/* 키 입력 */
+const initialSoundRules = {
 
-const keys = {};
+    "녀": "여",
+    "뇨": "요",
+    "뉴": "유",
+    "니": "이",
 
-window.addEventListener("keydown", e => {
-    keys[e.key.toLowerCase()] = true;
-});
+    "랴": "야",
+    "려": "여",
+    "례": "예",
+    "료": "요",
+    "류": "유",
+    "리": "이",
 
-window.addEventListener("keyup", e => {
-    keys[e.key.toLowerCase()] = false;
-});
-
-
-/* 모바일 버튼 */
-
-function buttonControl(id, key) {
-
-    const button = document.getElementById(id);
-
-    button.addEventListener("pointerdown", () => {
-        keys[key] = true;
-    });
-
-    button.addEventListener("pointerup", () => {
-        keys[key] = false;
-    });
-
-    button.addEventListener("pointerleave", () => {
-        keys[key] = false;
-    });
-}
-
-buttonControl("left", "arrowleft");
-buttonControl("right", "arrowright");
-buttonControl("up", "arrowup");
-buttonControl("down", "arrowdown");
-
-
-/* 자동차 */
-
-const car = {
-
-    x: 0,
-    speed: 0,
-    angle: 0
+    "라": "나",
+    "래": "내",
+    "로": "노",
+    "뢰": "뇌",
+    "루": "누",
+    "르": "느"
 
 };
 
 
-/* 도로 */
+/* =========================
+   이어지는 글자 확인
+========================= */
 
-let roadOffset = 0;
+function getNextLetters(lastChar) {
+
+    const result =
+    new Set([lastChar]);
 
 
-/* 나무 */
+    if (initialSoundRules[lastChar]) {
 
-const trees = [];
+        result.add(
+            initialSoundRules[lastChar]
+        );
 
-for (let i = 0; i < 40; i++) {
+    }
 
-    trees.push({
 
-        x: Math.random() < .5
-            ? -Math.random() * 400 - 100
-            : Math.random() * 400 + 100,
-
-        z: Math.random() * 2000
-
-    });
+    return [...result];
 
 }
 
 
-/* 게임 업데이트 */
+/* =========================
+   플레이어 차례
+========================= */
 
-function update() {
+function playerTurn() {
 
-    if (keys["arrowup"] || keys["w"]) {
+    if (gameOver) return;
 
-        car.speed += 0.15;
+
+    const word =
+    input.value.trim();
+
+
+    if (!word) {
+
+        showMessage(
+            "단어를 입력하세요."
+        );
+
+        return;
 
     }
 
-    else if (keys["arrowdown"] || keys["s"]) {
 
-        car.speed -= 0.25;
+    if (!wordSet.has(word)) {
+
+        showMessage(
+            "❌ 사전에 없는 단어입니다."
+        );
+
+        return;
+
+    }
+
+
+    if (usedWords.has(word)) {
+
+        showMessage(
+            "❌ 이미 사용한 단어입니다."
+        );
+
+        return;
+
+    }
+
+
+    if (lastWord !== "") {
+
+        const lastChar =
+        lastWord[lastWord.length - 1];
+
+
+        const possibleLetters =
+        getNextLetters(lastChar);
+
+
+        if (!possibleLetters.includes(word[0])) {
+
+            showMessage(
+                `❌ "${possibleLetters.join(" 또는 ")}"로 시작해야 합니다.`
+            );
+
+            return;
+
+        }
+
+    }
+
+
+    addWord(word);
+
+    input.value = "";
+
+    message.textContent =
+    `✅ ${word} 입력 성공!`;
+
+    turn.textContent =
+    "🤖 컴퓨터 생각 중...";
+
+
+    input.disabled = true;
+
+    submitBtn.disabled = true;
+
+
+    setTimeout(
+
+        computerTurn,
+
+        700
+
+    );
+
+}
+
+
+/* =========================
+   컴퓨터 차례
+========================= */
+
+function computerTurn() {
+
+    if (gameOver) return;
+
+
+    let candidates;
+
+
+    if (lastWord === "") {
+
+        candidates =
+        words.filter(word => {
+
+            return !usedWords.has(word);
+
+        });
 
     }
 
     else {
 
-        car.speed *= 0.98;
+        const lastChar =
+        lastWord[lastWord.length - 1];
+
+
+        const possibleLetters =
+        getNextLetters(lastChar);
+
+
+        candidates =
+        words.filter(word => {
+
+            return (
+
+                possibleLetters.includes(word[0])
+
+                &&
+
+                !usedWords.has(word)
+
+            );
+
+        });
 
     }
 
 
-    car.speed = Math.max(-5, Math.min(15, car.speed));
+    if (candidates.length === 0) {
 
+        endGame(
+            "🎉 컴퓨터가 이어갈 단어를 찾지 못했습니다! 당신의 승리!"
+        );
 
-    if (keys["arrowleft"] || keys["a"]) {
-
-        car.angle -= 0.04;
-
-    }
-
-    if (keys["arrowright"] || keys["d"]) {
-
-        car.angle += 0.04;
+        return;
 
     }
 
 
-    roadOffset += car.speed;
+    const randomIndex =
+    Math.floor(
+        Math.random() * candidates.length
+    );
 
 
-    document.getElementById("speed").textContent =
-        Math.max(0, Math.round(car.speed * 10));
+    const computerWord =
+    candidates[randomIndex];
 
 
-    trees.forEach(tree => {
+    addWord(computerWord);
 
-        tree.z -= car.speed * 5;
 
-        if (tree.z < 10) {
+    message.textContent =
+    `🤖 컴퓨터: ${computerWord}`;
 
-            tree.z = 2000;
+
+    turn.textContent =
+    "👤 당신의 차례입니다.";
+
+
+    input.disabled = false;
+
+    submitBtn.disabled = false;
+
+    input.focus();
+
+}
+
+
+/* =========================
+   단어 추가
+========================= */
+
+function addWord(word) {
+
+    usedWords.add(word);
+
+    lastWord =
+    word;
+
+
+    lastWordText.textContent =
+    word;
+
+
+    const element =
+    document.createElement("span");
+
+
+    element.className =
+    "word";
+
+
+    element.textContent =
+    word;
+
+
+    wordList.appendChild(element);
+
+}
+
+
+/* =========================
+   메시지
+========================= */
+
+function showMessage(text) {
+
+    message.textContent =
+    text;
+
+}
+
+
+/* =========================
+   게임 종료
+========================= */
+
+function endGame(text) {
+
+    gameOver = true;
+
+
+    turn.textContent =
+    "🏁 게임 종료";
+
+
+    message.textContent =
+    text;
+
+
+    input.disabled = true;
+
+    submitBtn.disabled = true;
+
+}
+
+
+/* =========================
+   다시 시작
+========================= */
+
+function restartGame() {
+
+    if (words.length === 0) return;
+
+
+    usedWords.clear();
+
+    lastWord = "";
+
+    gameOver = false;
+
+
+    wordList.innerHTML =
+    "";
+
+
+    lastWordText.textContent =
+    "-";
+
+
+    turn.textContent =
+    "👤 당신의 차례입니다.";
+
+
+    message.textContent =
+    "첫 단어를 입력하세요.";
+
+
+    input.value = "";
+
+    input.disabled = false;
+
+    submitBtn.disabled = false;
+
+    input.focus();
+
+}
+
+
+/* =========================
+   버튼 이벤트
+========================= */
+
+submitBtn.addEventListener(
+    "click",
+    playerTurn
+);
+
+
+input.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key === "Enter") {
+
+            playerTurn();
 
         }
 
-    });
+    }
+);
 
-}
 
+restartBtn.addEventListener(
+    "click",
+    restartGame
+);
 
-/* 하늘 */
 
-function drawSky() {
+/* =========================
+   시작
+========================= */
 
-    const gradient =
-        ctx.createLinearGradient(0, 0, 0, canvas.height);
-
-    gradient.addColorStop(0, "#60a5fa");
-    gradient.addColorStop(1, "#dbeafe");
-
-    ctx.fillStyle = gradient;
-
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-}
-
-
-/* 도로 */
-
-function drawRoad() {
-
-    const center =
-        canvas.width / 2 + car.angle * 300;
-
-    const horizon =
-        canvas.height * .42;
-
-    ctx.fillStyle = "#4ade80";
-
-    ctx.fillRect(
-        0,
-        horizon,
-        canvas.width,
-        canvas.height
-    );
-
-
-    ctx.fillStyle = "#444";
-
-    ctx.beginPath();
-
-    ctx.moveTo(center - 80, horizon);
-
-    ctx.lineTo(center + 80, horizon);
-
-    ctx.lineTo(canvas.width * .9, canvas.height);
-
-    ctx.lineTo(canvas.width * .1, canvas.height);
-
-    ctx.closePath();
-
-    ctx.fill();
-
-
-    /* 도로 중앙선 */
-
-    ctx.strokeStyle = "#facc15";
-
-    ctx.lineWidth = 8;
-
-    ctx.setLineDash([40, 40]);
-
-    ctx.lineDashOffset = -roadOffset * 5;
-
-    ctx.beginPath();
-
-    ctx.moveTo(center, horizon);
-
-    ctx.lineTo(canvas.width / 2, canvas.height);
-
-    ctx.stroke();
-
-    ctx.setLineDash([]);
-
-
-    /* 도로 가장자리 */
-
-    ctx.strokeStyle = "white";
-
-    ctx.lineWidth = 8;
-
-    ctx.beginPath();
-
-    ctx.moveTo(center - 80, horizon);
-
-    ctx.lineTo(canvas.width * .1, canvas.height);
-
-    ctx.moveTo(center + 80, horizon);
-
-    ctx.lineTo(canvas.width * .9, canvas.height);
-
-    ctx.stroke();
-
-}
-
-
-/* 나무 */
-
-function drawTrees() {
-
-    const center =
-        canvas.width / 2 + car.angle * 300;
-
-    const horizon =
-        canvas.height * .42;
-
-    trees.forEach(tree => {
-
-        const scale =
-            1000 / tree.z;
-
-        const x =
-            center + tree.x * scale;
-
-        const y =
-            horizon + 1000 * scale;
-
-        const size =
-            80 * scale;
-
-        if (x < -100 || x > canvas.width + 100) return;
-
-        ctx.fillStyle = "#7c3f20";
-
-        ctx.fillRect(
-            x - size * .1,
-            y - size,
-            size * .2,
-            size
-        );
-
-        ctx.fillStyle = "#166534";
-
-        ctx.beginPath();
-
-        ctx.arc(
-            x,
-            y - size,
-            size * .7,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fill();
-
-    });
-
-}
-
-
-/* 자동차 */
-
-function drawCar() {
-
-    const x =
-        canvas.width / 2;
-
-    const y =
-        canvas.height * .78;
-
-
-    ctx.save();
-
-    ctx.translate(x, y);
-
-    ctx.rotate(car.angle * .3);
-
-
-    /* 그림자 */
-
-    ctx.fillStyle = "rgba(0,0,0,.3)";
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-        0,
-        35,
-        100,
-        25,
-        0,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-
-    /* 자동차 본체 */
-
-    ctx.fillStyle = "#dc2626";
-
-    ctx.beginPath();
-
-    ctx.roundRect(
-        -75,
-        -30,
-        150,
-        80,
-        20
-    );
-
-    ctx.fill();
-
-
-    /* 차 지붕 */
-
-    ctx.fillStyle = "#991b1b";
-
-    ctx.beginPath();
-
-    ctx.moveTo(-50, -30);
-
-    ctx.lineTo(-30, -75);
-
-    ctx.lineTo(30, -75);
-
-    ctx.lineTo(50, -30);
-
-    ctx.closePath();
-
-    ctx.fill();
-
-
-    /* 유리 */
-
-    ctx.fillStyle = "#bae6fd";
-
-    ctx.fillRect(
-        -25,
-        -60,
-        50,
-        28
-    );
-
-
-    /* 바퀴 */
-
-    ctx.fillStyle = "#111";
-
-    ctx.fillRect(-65, 30, 25, 20);
-
-    ctx.fillRect(40, 30, 25, 20);
-
-
-    ctx.restore();
-
-}
-
-
-/* 게임 루프 */
-
-function gameLoop() {
-
-    update();
-
-    drawSky();
-
-    drawRoad();
-
-    drawTrees();
-
-    drawCar();
-
-    requestAnimationFrame(gameLoop);
-
-}
-
-gameLoop();
+loadWords();
 
 </script>
 
