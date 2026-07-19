@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>끝말잇기</title>
+<title>고난도 끝말잇기</title>
 
 <style>
 
@@ -170,7 +170,7 @@ button:disabled {
 
 <header>
 
-    <h1>🔤 끝말잇기</h1>
+    <h1>🔤 고난도 끝말잇기</h1>
 
     <p>나 vs 컴퓨터</p>
 
@@ -288,7 +288,9 @@ button:disabled {
 
         • 두음법칙을 적용합니다.<br>
 
-        • 한방 단어를 사용할 수 있습니다.<br>
+        • 첫 턴에는 한방 단어를 사용할 수 없습니다.<br>
+
+        • 컴퓨터는 플레이어의 선택지를 줄이는 단어를 우선합니다.<br>
 
         • 힌트는 한 라운드에 1번 사용할 수 있습니다.<br>
 
@@ -385,32 +387,6 @@ document.getElementById("loading");
 
 /* ==================================================
    두음법칙
-==================================================
-
-   끝말잇기 기준:
-
-   관리 → 이리듐
-
-   리 → 이
-
-   녀 → 여
-   뇨 → 요
-   뉴 → 유
-   니 → 이
-
-   랴 → 야
-   려 → 여
-   례 → 예
-   료 → 요
-   류 → 유
-   리 → 이
-
-   라 → 나
-   래 → 내
-   로 → 노
-   뢰 → 뇌
-   루 → 누
-
 ================================================== */
 
 
@@ -420,17 +396,12 @@ function getPossibleFirstLetters(lastChar) {
     const result = new Set();
 
 
-    // 기본적으로 같은 글자로 시작 가능
+    // 원래 글자
 
     result.add(lastChar);
 
 
-    /*
-    =================================
-    ㄴ → ㅇ
-    =================================
-    */
-
+    // 녀 → 여
 
     if (lastChar === "녀") {
 
@@ -439,12 +410,16 @@ function getPossibleFirstLetters(lastChar) {
     }
 
 
+    // 뇨 → 요
+
     if (lastChar === "뇨") {
 
         result.add("요");
 
     }
 
+
+    // 뉴 → 유
 
     if (lastChar === "뉴") {
 
@@ -453,6 +428,8 @@ function getPossibleFirstLetters(lastChar) {
     }
 
 
+    // 니 → 이
+
     if (lastChar === "니") {
 
         result.add("이");
@@ -460,12 +437,7 @@ function getPossibleFirstLetters(lastChar) {
     }
 
 
-    /*
-    =================================
-    ㄹ → ㅇ
-    =================================
-    */
-
+    // 랴 → 야
 
     if (lastChar === "랴") {
 
@@ -474,12 +446,16 @@ function getPossibleFirstLetters(lastChar) {
     }
 
 
+    // 려 → 여
+
     if (lastChar === "려") {
 
         result.add("여");
 
     }
 
+
+    // 례 → 예
 
     if (lastChar === "례") {
 
@@ -488,12 +464,16 @@ function getPossibleFirstLetters(lastChar) {
     }
 
 
+    // 료 → 요
+
     if (lastChar === "료") {
 
         result.add("요");
 
     }
 
+
+    // 류 → 유
 
     if (lastChar === "류") {
 
@@ -502,6 +482,8 @@ function getPossibleFirstLetters(lastChar) {
     }
 
 
+    // 리 → 이
+
     if (lastChar === "리") {
 
         result.add("이");
@@ -509,12 +491,7 @@ function getPossibleFirstLetters(lastChar) {
     }
 
 
-    /*
-    =================================
-    ㄹ → ㄴ
-    =================================
-    */
-
+    // 라 → 나
 
     if (lastChar === "라") {
 
@@ -523,12 +500,16 @@ function getPossibleFirstLetters(lastChar) {
     }
 
 
+    // 래 → 내
+
     if (lastChar === "래") {
 
         result.add("내");
 
     }
 
+
+    // 로 → 노
 
     if (lastChar === "로") {
 
@@ -537,12 +518,16 @@ function getPossibleFirstLetters(lastChar) {
     }
 
 
+    // 뢰 → 뇌
+
     if (lastChar === "뢰") {
 
         result.add("뇌");
 
     }
 
+
+    // 루 → 누
 
     if (lastChar === "루") {
 
@@ -557,107 +542,7 @@ function getPossibleFirstLetters(lastChar) {
 
 
 /* ==================================================
-   단어 목록 불러오기
-================================================== */
-
-
-async function loadWords() {
-
-
-    try {
-
-
-        const response =
-        await fetch(WORD_FILE);
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                "단어 파일을 불러올 수 없습니다."
-            );
-
-        }
-
-
-        const text =
-        await response.text();
-
-
-        words = text
-
-            .split(/\r?\n/)
-
-            .map(word => word.trim())
-
-            .filter(word => {
-
-
-                return (
-
-                    /^[가-힣]+$/.test(word)
-
-                    &&
-
-                    word.length >= 2
-
-                );
-
-            });
-
-
-        wordSet =
-        new Set(words);
-
-
-        loading.textContent =
-
-        `📚 ${words.length.toLocaleString()}개의 단어를 불러왔습니다.`;
-
-
-        input.disabled = false;
-
-        submitBtn.disabled = false;
-
-        hintBtn.disabled = false;
-
-        passBtn.disabled = false;
-
-
-        turn.textContent =
-        "👤 당신의 차례입니다.";
-
-
-        message.textContent =
-        "첫 단어를 입력하세요.";
-
-
-        input.focus();
-
-
-    }
-
-    catch (error) {
-
-
-        loading.textContent =
-        "❌ 단어 파일을 불러오지 못했습니다.";
-
-
-        message.textContent =
-
-        "wordslist.txt가 index.html과 같은 폴더에 있는지 확인하세요.";
-
-
-        console.error(error);
-
-    }
-
-}
-
-
-/* ==================================================
-   이어갈 수 있는 단어 찾기
+   다음 단어 후보 찾기
 ================================================== */
 
 
@@ -704,7 +589,42 @@ function getCandidates() {
 
 
 /* ==================================================
-   플레이어 단어 입력
+   첫 턴 한방 단어 검사
+================================================== */
+
+
+function isFirstTurnValid(word) {
+
+
+    const originalLastWord =
+    lastWord;
+
+
+    lastWord =
+    word;
+
+
+    const nextWords =
+    getCandidates();
+
+
+    lastWord =
+    originalLastWord;
+
+
+    /*
+       다음 단어가 2개 미만이면
+       한방 단어로 판단
+    */
+
+
+    return nextWords.length >= 2;
+
+}
+
+
+/* ==================================================
+   플레이어 턴
 ================================================== */
 
 
@@ -722,7 +642,9 @@ function playerTurn() {
 
 
         showMessage(
+
             "단어를 입력하세요."
+
         );
 
 
@@ -735,7 +657,9 @@ function playerTurn() {
 
 
         showMessage(
+
             "❌ 사전에 없는 단어입니다."
+
         );
 
 
@@ -748,7 +672,9 @@ function playerTurn() {
 
 
         showMessage(
+
             "❌ 이미 사용한 단어입니다."
+
         );
 
 
@@ -757,7 +683,41 @@ function playerTurn() {
     }
 
 
-    if (lastWord !== "") {
+    /*
+    ==========================================
+    첫 턴
+    ==========================================
+    */
+
+
+    if (lastWord === "") {
+
+
+        if (!isFirstTurnValid(word)) {
+
+
+            showMessage(
+
+                "❌ 첫 턴에는 한방 단어를 사용할 수 없습니다!"
+
+            );
+
+
+            return;
+
+        }
+
+    }
+
+
+    /*
+    ==========================================
+    일반 끝말잇기
+    ==========================================
+    */
+
+
+    else {
 
 
         const lastChar =
@@ -817,7 +777,56 @@ function playerTurn() {
 
 
 /* ==================================================
-   컴퓨터 차례
+   컴퓨터 난이도 계산
+================================================== */
+
+
+function countNextWords(word) {
+
+
+    const lastChar =
+    word[word.length - 1];
+
+
+    const possibleLetters =
+    getPossibleFirstLetters(lastChar);
+
+
+    let count = 0;
+
+
+    for (const nextWord of words) {
+
+
+        if (
+
+            possibleLetters.includes(nextWord[0])
+
+            &&
+
+            !usedWords.has(nextWord)
+
+            &&
+
+            nextWord !== word
+
+        ) {
+
+
+            count++;
+
+        }
+
+    }
+
+
+    return count;
+
+}
+
+
+/* ==================================================
+   컴퓨터 턴
 ================================================== */
 
 
@@ -846,19 +855,98 @@ function computerTurn() {
     }
 
 
-    const randomIndex =
+    /*
+    ==========================================
+    모든 후보의 다음 선택지 계산
+    ==========================================
+    */
 
-    Math.floor(
 
-        Math.random() *
+    const scoredCandidates =
 
-        candidates.length
+    candidates.map(word => {
+
+
+        return {
+
+
+            word: word,
+
+
+            nextCount:
+
+            countNextWords(word)
+
+
+        };
+
+    });
+
+
+    /*
+    ==========================================
+    다음 선택지가 적은 순서
+    ==========================================
+    */
+
+
+    scoredCandidates.sort(
+
+        (a, b) => {
+
+
+            return (
+
+                a.nextCount
+
+                -
+
+                b.nextCount
+
+            );
+
+        }
 
     );
 
 
+    /*
+    ==========================================
+    상위 5개 중 랜덤
+    ==========================================
+    */
+
+
+    const topCount =
+
+    Math.min(
+
+        5,
+
+        scoredCandidates.length
+
+    );
+
+
+    const selected =
+
+    scoredCandidates[
+
+        Math.floor(
+
+            Math.random()
+
+            *
+
+            topCount
+
+        )
+
+    ];
+
+
     const computerWord =
-    candidates[randomIndex];
+    selected.word;
 
 
     addWord(computerWord);
@@ -895,7 +983,7 @@ function useHint() {
 
         showMessage(
 
-            "❌ 이번 라운드의 힌트를 모두 사용했습니다."
+            "❌ 힌트를 모두 사용했습니다."
 
         );
 
@@ -912,9 +1000,9 @@ function useHint() {
     if (candidates.length === 0) {
 
 
-        showMessage(
+        endGame(
 
-            "💡 이어갈 수 있는 단어가 없습니다."
+            "🎉 이어갈 단어가 없습니다!"
 
         );
 
@@ -928,7 +1016,9 @@ function useHint() {
 
     Math.floor(
 
-        Math.random() *
+        Math.random()
+
+        *
 
         candidates.length
 
@@ -952,7 +1042,7 @@ function useHint() {
 
     showMessage(
 
-        `💡 힌트: "${hintWord}"`
+        `💡 힌트: ${hintWord}`
 
     );
 
@@ -994,7 +1084,7 @@ function usePass() {
 
         endGame(
 
-            "🎉 컴퓨터가 이어갈 단어가 없습니다! 당신의 승리!"
+            "🎉 컴퓨터가 이어갈 단어가 없습니다!"
 
         );
 
@@ -1022,7 +1112,7 @@ function usePass() {
 
     message.textContent =
 
-    "⏭️ 패스! 컴퓨터가 단어를 냅니다.";
+    "⏭️ 패스!";
 
 
     turn.textContent =
@@ -1081,7 +1171,7 @@ function addWord(word) {
 
 
 /* ==================================================
-   플레이어 조작 활성화
+   조작 활성화
 ================================================== */
 
 
@@ -1110,7 +1200,7 @@ function enablePlayerControls() {
 
 
 /* ==================================================
-   플레이어 조작 비활성화
+   조작 비활성화
 ================================================== */
 
 
@@ -1238,7 +1328,7 @@ function restartGame() {
 
 
 /* ==================================================
-   버튼 이벤트
+   이벤트
 ================================================== */
 
 
@@ -1303,6 +1393,114 @@ input.addEventListener(
 
 
 loadWords();
+
+
+async function loadWords() {
+
+
+    try {
+
+
+        const response =
+        await fetch(WORD_FILE);
+
+
+        if (!response.ok) {
+
+
+            throw new Error(
+
+                "wordslist.txt를 불러올 수 없습니다."
+
+            );
+
+        }
+
+
+        const text =
+        await response.text();
+
+
+        words = text
+
+            .split(/\r?\n/)
+
+            .map(word => word.trim())
+
+            .filter(word => {
+
+
+                return (
+
+                    /^[가-힣]+$/.test(word)
+
+                    &&
+
+                    word.length >= 2
+
+                );
+
+            });
+
+
+        wordSet =
+        new Set(words);
+
+
+        loading.textContent =
+
+        `📚 ${words.length.toLocaleString()}개의 단어를 불러왔습니다.`;
+
+
+        input.disabled =
+        false;
+
+
+        submitBtn.disabled =
+        false;
+
+
+        hintBtn.disabled =
+        false;
+
+
+        passBtn.disabled =
+        false;
+
+
+        turn.textContent =
+
+        "👤 당신의 차례입니다.";
+
+
+        message.textContent =
+
+        "첫 단어를 입력하세요.";
+
+
+        input.focus();
+
+
+    }
+
+    catch (error) {
+
+
+        loading.textContent =
+
+        "❌ 단어 파일을 불러오지 못했습니다.";
+
+
+        message.textContent =
+
+        "index.html과 wordslist.txt가 같은 폴더에 있는지 확인하세요.";
+
+
+        console.error(error);
+
+    }
+
+}
 
 
 </script>
