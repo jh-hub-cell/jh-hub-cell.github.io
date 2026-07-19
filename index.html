@@ -4,10 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>고난도 끝말잇기</title>
+<title>끝말잇기</title>
 
 <style>
-
 * {
     box-sizing: border-box;
 }
@@ -23,7 +22,7 @@ header {
     background: #111827;
     color: white;
     text-align: center;
-    padding: 28px 20px;
+    padding: 25px;
 }
 
 header h1 {
@@ -152,7 +151,6 @@ button:disabled {
 }
 
 @media (max-width: 600px) {
-
     .input-area {
         flex-direction: column;
     }
@@ -160,50 +158,27 @@ button:disabled {
     #submitBtn {
         padding: 14px;
     }
-
 }
-
 </style>
 </head>
 
 <body>
 
 <header>
-
-    <h1>🔤 고난도 끝말잇기</h1>
-
+    <h1>🔤 끝말잇기</h1>
     <p>나 vs 컴퓨터</p>
-
 </header>
-
 
 <div class="container">
 
-
     <div id="loading" class="status">
-
         📚 단어 사전 불러오는 중...
-
     </div>
-
 
     <div class="status">
-
-        <div id="turn">
-
-            단어를 입력하세요
-
-        </div>
-
-
-        <div id="lastWord">
-
-            -
-
-        </div>
-
+        <div id="turn">단어를 입력하세요</div>
+        <div id="lastWord">-</div>
     </div>
-
 
     <div class="input-area">
 
@@ -214,87 +189,55 @@ button:disabled {
             disabled
         >
 
-        <button
-            id="submitBtn"
-            disabled
-        >
-
+        <button id="submitBtn" disabled>
             입력
-
         </button>
 
     </div>
-
 
     <div class="extra-buttons">
 
         <button id="hintBtn" disabled>
-
             💡 힌트
             <span id="hintCount">1</span>
-
         </button>
-
 
         <button id="passBtn" disabled>
-
             ⏭️ 패스
             <span id="passCount">3</span>
-
         </button>
 
     </div>
 
-
-    <div
-        id="message"
-        class="message"
-    >
-
+    <div id="message" class="message">
         단어를 불러오는 중입니다.
-
     </div>
-
 
     <div class="words">
 
         <h3>📚 사용한 단어</h3>
 
-        <div
-            id="wordList"
-            class="word-list"
-        ></div>
+        <div id="wordList" class="word-list"></div>
 
     </div>
 
-
     <br>
 
-
     <button id="restartBtn">
-
         🔄 다시 시작
-
     </button>
-
 
     <div class="rules">
 
         <b>게임 규칙</b><br>
 
         • 사전에 있는 단어만 사용할 수 있습니다.<br>
-
         • 이미 사용한 단어는 사용할 수 없습니다.<br>
-
         • 두음법칙을 적용합니다.<br>
-
         • 첫 턴에는 한방 단어를 사용할 수 없습니다.<br>
-
-        • 컴퓨터는 플레이어의 선택지를 줄이는 단어를 우선합니다.<br>
-
-        • 힌트는 한 라운드에 1번 사용할 수 있습니다.<br>
-
-        • 패스는 한 라운드에 3번 사용할 수 있습니다.
+        • 컴퓨터는 진짜 한방 단어를 사용하지 않습니다.<br>
+        • 힌트는 1개입니다.<br>
+        • 패스는 3개입니다.
 
     </div>
 
@@ -304,18 +247,16 @@ button:disabled {
 <script>
 
 
-/* ==================================================
+/* ==========================================
    설정
-================================================== */
-
+========================================== */
 
 const WORD_FILE = "wordslist.txt";
 
 
-/* ==================================================
+/* ==========================================
    게임 변수
-================================================== */
-
+========================================== */
 
 let words = [];
 
@@ -332,228 +273,131 @@ let hintCount = 1;
 let passCount = 3;
 
 
-/* ==================================================
+/* ==========================================
    HTML 요소
-================================================== */
-
+========================================== */
 
 const input =
 document.getElementById("wordInput");
 
-
 const submitBtn =
 document.getElementById("submitBtn");
-
 
 const hintBtn =
 document.getElementById("hintBtn");
 
-
 const passBtn =
 document.getElementById("passBtn");
-
 
 const restartBtn =
 document.getElementById("restartBtn");
 
-
 const hintCountText =
 document.getElementById("hintCount");
-
 
 const passCountText =
 document.getElementById("passCount");
 
-
 const message =
 document.getElementById("message");
-
 
 const turn =
 document.getElementById("turn");
 
-
 const lastWordText =
 document.getElementById("lastWord");
 
-
 const wordList =
 document.getElementById("wordList");
-
 
 const loading =
 document.getElementById("loading");
 
 
-/* ==================================================
+/* ==========================================
    두음법칙
-================================================== */
-
+========================================== */
 
 function getPossibleFirstLetters(lastChar) {
 
-
     const result = new Set();
 
-
     // 원래 글자
-
     result.add(lastChar);
 
-
     // 녀 → 여
-
-    if (lastChar === "녀") {
-
+    if (lastChar === "녀")
         result.add("여");
-
-    }
-
 
     // 뇨 → 요
-
-    if (lastChar === "뇨") {
-
+    if (lastChar === "뇨")
         result.add("요");
-
-    }
-
 
     // 뉴 → 유
-
-    if (lastChar === "뉴") {
-
+    if (lastChar === "뉴")
         result.add("유");
-
-    }
-
 
     // 니 → 이
-
-    if (lastChar === "니") {
-
+    if (lastChar === "니")
         result.add("이");
-
-    }
-
 
     // 랴 → 야
-
-    if (lastChar === "랴") {
-
+    if (lastChar === "랴")
         result.add("야");
 
-    }
-
-
     // 려 → 여
-
-    if (lastChar === "려") {
-
+    if (lastChar === "려")
         result.add("여");
 
-    }
-
-
     // 례 → 예
-
-    if (lastChar === "례") {
-
+    if (lastChar === "례")
         result.add("예");
 
-    }
-
-
     // 료 → 요
-
-    if (lastChar === "료") {
-
+    if (lastChar === "료")
         result.add("요");
 
-    }
-
-
     // 류 → 유
-
-    if (lastChar === "류") {
-
+    if (lastChar === "류")
         result.add("유");
 
-    }
-
-
     // 리 → 이
-
-    if (lastChar === "리") {
-
+    if (lastChar === "리")
         result.add("이");
 
-    }
-
-
     // 라 → 나
-
-    if (lastChar === "라") {
-
+    if (lastChar === "라")
         result.add("나");
 
-    }
-
-
     // 래 → 내
-
-    if (lastChar === "래") {
-
+    if (lastChar === "래")
         result.add("내");
 
-    }
-
-
     // 로 → 노
-
-    if (lastChar === "로") {
-
+    if (lastChar === "로")
         result.add("노");
 
-    }
-
-
     // 뢰 → 뇌
-
-    if (lastChar === "뢰") {
-
+    if (lastChar === "뢰")
         result.add("뇌");
 
-    }
-
-
     // 루 → 누
-
-    if (lastChar === "루") {
-
+    if (lastChar === "루")
         result.add("누");
 
-    }
-
-
     return [...result];
-
 }
 
 
-/* ==================================================
-   다음 단어 후보 찾기
-================================================== */
-
+/* ==========================================
+   다음 단어 후보
+========================================== */
 
 function getCandidates() {
 
-
     if (lastWord === "") {
 
-
         return words.filter(word => {
-
 
             return !usedWords.has(word);
 
@@ -561,17 +405,13 @@ function getCandidates() {
 
     }
 
-
     const lastChar =
     lastWord[lastWord.length - 1];
-
 
     const possibleLetters =
     getPossibleFirstLetters(lastChar);
 
-
     return words.filter(word => {
-
 
         return (
 
@@ -584,219 +424,24 @@ function getCandidates() {
         );
 
     });
-
 }
 
 
-/* ==================================================
-   첫 턴 한방 단어 검사
-================================================== */
-
-
-function isFirstTurnValid(word) {
-
-
-    const originalLastWord =
-    lastWord;
-
-
-    lastWord =
-    word;
-
-
-    const nextWords =
-    getCandidates();
-
-
-    lastWord =
-    originalLastWord;
-
-
-    /*
-       다음 단어가 2개 미만이면
-       한방 단어로 판단
-    */
-
-
-    return nextWords.length >= 2;
-
-}
-
-
-/* ==================================================
-   플레이어 턴
-================================================== */
-
-
-function playerTurn() {
-
-
-    if (gameOver) return;
-
-
-    const word =
-    input.value.trim();
-
-
-    if (!word) {
-
-
-        showMessage(
-
-            "단어를 입력하세요."
-
-        );
-
-
-        return;
-
-    }
-
-
-    if (!wordSet.has(word)) {
-
-
-        showMessage(
-
-            "❌ 사전에 없는 단어입니다."
-
-        );
-
-
-        return;
-
-    }
-
-
-    if (usedWords.has(word)) {
-
-
-        showMessage(
-
-            "❌ 이미 사용한 단어입니다."
-
-        );
-
-
-        return;
-
-    }
-
-
-    /*
-    ==========================================
-    첫 턴
-    ==========================================
-    */
-
-
-    if (lastWord === "") {
-
-
-        if (!isFirstTurnValid(word)) {
-
-
-            showMessage(
-
-                "❌ 첫 턴에는 한방 단어를 사용할 수 없습니다!"
-
-            );
-
-
-            return;
-
-        }
-
-    }
-
-
-    /*
-    ==========================================
-    일반 끝말잇기
-    ==========================================
-    */
-
-
-    else {
-
-
-        const lastChar =
-        lastWord[lastWord.length - 1];
-
-
-        const possibleLetters =
-        getPossibleFirstLetters(lastChar);
-
-
-        if (!possibleLetters.includes(word[0])) {
-
-
-            showMessage(
-
-                `❌ "${possibleLetters.join(" 또는 ")}"로 시작해야 합니다.`
-
-            );
-
-
-            return;
-
-        }
-
-    }
-
-
-    addWord(word);
-
-
-    input.value =
-    "";
-
-
-    message.textContent =
-
-    `✅ ${word} 입력 성공!`;
-
-
-    turn.textContent =
-
-    "🤖 컴퓨터 생각 중...";
-
-
-    disablePlayerControls();
-
-
-    setTimeout(
-
-        computerTurn,
-
-        700
-
-    );
-
-}
-
-
-/* ==================================================
-   컴퓨터 난이도 계산
-================================================== */
-
+/* ==========================================
+   특정 단어 뒤의 선택지 수
+========================================== */
 
 function countNextWords(word) {
-
 
     const lastChar =
     word[word.length - 1];
 
-
     const possibleLetters =
     getPossibleFirstLetters(lastChar);
 
-
     let count = 0;
 
-
     for (const nextWord of words) {
-
 
         if (
 
@@ -812,36 +457,140 @@ function countNextWords(word) {
 
         ) {
 
-
             count++;
 
         }
 
     }
 
-
     return count;
-
 }
 
 
-/* ==================================================
-   컴퓨터 턴
-================================================== */
+/* ==========================================
+   첫 턴 한방 단어 금지
+========================================== */
+
+function isFirstTurnValid(word) {
+
+    const oldLastWord =
+    lastWord;
+
+    lastWord =
+    word;
+
+    const nextWords =
+    getCandidates();
+
+    lastWord =
+    oldLastWord;
+
+    return nextWords.length >= 2;
+}
 
 
-function computerTurn() {
+/* ==========================================
+   플레이어 턴
+========================================== */
 
+function playerTurn() {
 
     if (gameOver) return;
 
+    const word =
+    input.value.trim();
+
+    if (!word) {
+
+        showMessage("단어를 입력하세요.");
+
+        return;
+    }
+
+    if (!wordSet.has(word)) {
+
+        showMessage("❌ 사전에 없는 단어입니다.");
+
+        return;
+    }
+
+    if (usedWords.has(word)) {
+
+        showMessage("❌ 이미 사용한 단어입니다.");
+
+        return;
+    }
+
+
+    /* 첫 턴 */
+
+    if (lastWord === "") {
+
+        if (!isFirstTurnValid(word)) {
+
+            showMessage(
+                "❌ 첫 턴에는 한방 단어를 사용할 수 없습니다!"
+            );
+
+            return;
+        }
+
+    }
+
+
+    /* 일반 턴 */
+
+    else {
+
+        const lastChar =
+        lastWord[lastWord.length - 1];
+
+        const possibleLetters =
+        getPossibleFirstLetters(lastChar);
+
+        if (!possibleLetters.includes(word[0])) {
+
+            showMessage(
+
+                `❌ "${possibleLetters.join(" 또는 ")}"로 시작해야 합니다.`
+
+            );
+
+            return;
+        }
+    }
+
+    addWord(word);
+
+    input.value = "";
+
+    message.textContent =
+    `✅ ${word} 입력 성공!`;
+
+    turn.textContent =
+    "🤖 컴퓨터 생각 중...";
+
+    disablePlayerControls();
+
+    setTimeout(computerTurn, 700);
+}
+
+
+/* ==========================================
+   컴퓨터 턴
+========================================== */
+
+function computerTurn() {
+
+    if (gameOver) return;
 
     const candidates =
     getCandidates();
 
 
-    if (candidates.length === 0) {
+    /* 컴퓨터가 낼 단어가 없음 */
 
+    if (candidates.length === 0) {
 
         endGame(
 
@@ -849,34 +598,24 @@ function computerTurn() {
 
         );
 
-
         return;
-
     }
 
 
     /*
-    ==========================================
     모든 후보의 다음 선택지 계산
-    ==========================================
     */
-
 
     const scoredCandidates =
 
     candidates.map(word => {
 
-
         return {
-
 
             word: word,
 
-
             nextCount:
-
             countNextWords(word)
-
 
         };
 
@@ -884,133 +623,243 @@ function computerTurn() {
 
 
     /*
-    ==========================================
-    다음 선택지가 적은 순서
-    ==========================================
+    진짜 한방 단어 제거
     */
 
+    const playableCandidates =
 
-    scoredCandidates.sort(
+    scoredCandidates.filter(item => {
 
-        (a, b) => {
+        return item.nextCount > 0;
 
-
-            return (
-
-                a.nextCount
-
-                -
-
-                b.nextCount
-
-            );
-
-        }
-
-    );
+    });
 
 
     /*
-    ==========================================
-    상위 5개 중 랜덤
-    ==========================================
+    전부 한방 단어밖에 없다면
+    어쩔 수 없이 후보 전체 사용
     */
 
+    const pool =
 
-    const topCount =
+    playableCandidates.length > 0
 
-    Math.min(
+        ? playableCandidates
 
-        5,
-
-        scoredCandidates.length
-
-    );
+        : scoredCandidates;
 
 
-    const selected =
+    /*
+    난이도별 분류
+    */
 
-    scoredCandidates[
+    const easyWords =
 
-        Math.floor(
+    pool.filter(item => {
 
-            Math.random()
+        return item.nextCount >= 6;
 
-            *
+    });
 
-            topCount
 
-        )
+    const mediumWords =
 
-    ];
+    pool.filter(item => {
+
+        return (
+
+            item.nextCount >= 2
+
+            &&
+
+            item.nextCount <= 5
+
+        );
+
+    });
+
+
+    const hardWords =
+
+    pool.filter(item => {
+
+        return item.nextCount === 1;
+
+    });
+
+
+    let selected = null;
+
+    const random =
+    Math.random();
+
+
+    /*
+    70%
+    일반적인 단어
+    */
+
+    if (
+
+        random < 0.70
+
+        &&
+
+        easyWords.length > 0
+
+    ) {
+
+        selected =
+
+        easyWords[
+
+            Math.floor(
+
+                Math.random()
+
+                *
+
+                easyWords.length
+
+            )
+
+        ];
+
+    }
+
+
+    /*
+    25%
+    적당히 어려운 단어
+    */
+
+    else if (
+
+        random < 0.95
+
+        &&
+
+        mediumWords.length > 0
+
+    ) {
+
+        selected =
+
+        mediumWords[
+
+            Math.floor(
+
+                Math.random()
+
+                *
+
+                mediumWords.length
+
+            )
+
+        ];
+
+    }
+
+
+    /*
+    5%
+    어려운 단어
+    */
+
+    else if (
+
+        hardWords.length > 0
+
+    ) {
+
+        selected =
+
+        hardWords[
+
+            Math.floor(
+
+                Math.random()
+
+                *
+
+                hardWords.length
+
+            )
+
+        ];
+
+    }
+
+
+    /*
+    해당 그룹이 없을 때
+    */
+
+    if (!selected) {
+
+        selected =
+
+        pool[
+
+            Math.floor(
+
+                Math.random()
+
+                *
+
+                pool.length
+
+            )
+
+        ];
+
+    }
 
 
     const computerWord =
     selected.word;
 
-
     addWord(computerWord);
 
-
     message.textContent =
-
     `🤖 컴퓨터: ${computerWord}`;
 
-
     turn.textContent =
-
     "👤 당신의 차례입니다.";
 
-
     enablePlayerControls();
-
 }
 
 
-/* ==================================================
+/* ==========================================
    힌트
-================================================== */
-
+========================================== */
 
 function useHint() {
 
-
     if (gameOver) return;
-
 
     if (hintCount <= 0) {
 
-
         showMessage(
-
             "❌ 힌트를 모두 사용했습니다."
-
         );
 
-
         return;
-
     }
-
 
     const candidates =
     getCandidates();
 
-
     if (candidates.length === 0) {
 
-
         endGame(
-
             "🎉 이어갈 단어가 없습니다!"
-
         );
 
-
         return;
-
     }
-
 
     const randomIndex =
 
@@ -1024,402 +873,274 @@ function useHint() {
 
     );
 
-
     const hintWord =
     candidates[randomIndex];
 
-
     hintCount--;
-
 
     hintCountText.textContent =
     hintCount;
 
-
     hintBtn.disabled =
     true;
 
-
     showMessage(
-
         `💡 힌트: ${hintWord}`
-
     );
-
 }
 
 
-/* ==================================================
+/* ==========================================
    패스
-================================================== */
-
+========================================== */
 
 function usePass() {
 
-
     if (gameOver) return;
-
 
     if (passCount <= 0) {
 
-
         showMessage(
-
             "❌ 패스를 모두 사용했습니다."
-
         );
 
-
         return;
-
     }
-
 
     const candidates =
     getCandidates();
 
-
     if (candidates.length === 0) {
 
-
         endGame(
-
             "🎉 컴퓨터가 이어갈 단어가 없습니다!"
-
         );
 
-
         return;
-
     }
 
-
     passCount--;
-
 
     passCountText.textContent =
     passCount;
 
-
-    if (passCount <= 0) {
-
-
-        passBtn.disabled =
-        true;
-
-    }
-
-
     message.textContent =
-
     "⏭️ 패스!";
 
-
     turn.textContent =
-
     "🤖 컴퓨터 생각 중...";
-
 
     disablePlayerControls();
 
-
-    setTimeout(
-
-        computerTurn,
-
-        700
-
-    );
-
+    setTimeout(computerTurn, 700);
 }
 
 
-/* ==================================================
+/* ==========================================
    단어 추가
-================================================== */
-
+========================================== */
 
 function addWord(word) {
 
-
     usedWords.add(word);
-
 
     lastWord =
     word;
 
-
     lastWordText.textContent =
     word;
-
 
     const element =
     document.createElement("span");
 
-
     element.className =
     "word";
-
 
     element.textContent =
     word;
 
-
     wordList.appendChild(element);
-
 }
 
 
-/* ==================================================
-   조작 활성화
-================================================== */
-
+/* ==========================================
+   입력 활성화
+========================================== */
 
 function enablePlayerControls() {
-
 
     input.disabled =
     false;
 
-
     submitBtn.disabled =
     false;
-
 
     hintBtn.disabled =
     hintCount <= 0;
 
-
     passBtn.disabled =
     passCount <= 0;
 
-
     input.focus();
-
 }
 
 
-/* ==================================================
-   조작 비활성화
-================================================== */
-
+/* ==========================================
+   입력 비활성화
+========================================== */
 
 function disablePlayerControls() {
-
 
     input.disabled =
     true;
 
-
     submitBtn.disabled =
     true;
-
 
     hintBtn.disabled =
     true;
 
-
     passBtn.disabled =
     true;
-
 }
 
 
-/* ==================================================
+/* ==========================================
    메시지
-================================================== */
-
+========================================== */
 
 function showMessage(text) {
 
-
     message.textContent =
     text;
-
 }
 
 
-/* ==================================================
+/* ==========================================
    게임 종료
-================================================== */
-
+========================================== */
 
 function endGame(text) {
 
-
     gameOver =
     true;
-
 
     turn.textContent =
     "🏁 게임 종료";
 
-
     message.textContent =
     text;
 
-
     disablePlayerControls();
-
 }
 
 
-/* ==================================================
+/* ==========================================
    다시 시작
-================================================== */
-
+========================================== */
 
 function restartGame() {
 
-
     if (words.length === 0) return;
 
-
     usedWords.clear();
-
 
     lastWord =
     "";
 
-
     gameOver =
     false;
-
 
     hintCount =
     1;
 
-
     passCount =
     3;
-
 
     hintCountText.textContent =
     hintCount;
 
-
     passCountText.textContent =
     passCount;
-
 
     wordList.innerHTML =
     "";
 
-
     lastWordText.textContent =
     "-";
-
 
     turn.textContent =
     "👤 당신의 차례입니다.";
 
-
     message.textContent =
     "첫 단어를 입력하세요.";
-
 
     input.value =
     "";
 
-
     enablePlayerControls();
-
 }
 
 
-/* ==================================================
+/* ==========================================
    이벤트
-================================================== */
-
+========================================== */
 
 submitBtn.addEventListener(
-
     "click",
-
     playerTurn
-
 );
-
 
 hintBtn.addEventListener(
-
     "click",
-
     useHint
-
 );
-
 
 passBtn.addEventListener(
-
     "click",
-
     usePass
-
 );
-
 
 restartBtn.addEventListener(
-
     "click",
-
     restartGame
-
 );
 
-
 input.addEventListener(
-
     "keydown",
-
     event => {
 
-
         if (event.key === "Enter") {
-
 
             playerTurn();
 
         }
 
     }
-
 );
 
 
-/* ==================================================
-   시작
-================================================== */
-
-
-loadWords();
-
+/* ==========================================
+   단어 사전 불러오기
+========================================== */
 
 async function loadWords() {
 
-
     try {
-
 
         const response =
         await fetch(WORD_FILE);
 
-
         if (!response.ok) {
 
-
             throw new Error(
-
                 "wordslist.txt를 불러올 수 없습니다."
-
             );
 
         }
 
-
         const text =
         await response.text();
-
 
         words = text
 
@@ -1428,7 +1149,6 @@ async function loadWords() {
             .map(word => word.trim())
 
             .filter(word => {
-
 
                 return (
 
@@ -1455,46 +1175,34 @@ async function loadWords() {
         input.disabled =
         false;
 
-
         submitBtn.disabled =
         false;
 
-
         hintBtn.disabled =
         false;
-
 
         passBtn.disabled =
         false;
 
 
         turn.textContent =
-
         "👤 당신의 차례입니다.";
 
-
         message.textContent =
-
         "첫 단어를 입력하세요.";
 
-
         input.focus();
-
 
     }
 
     catch (error) {
 
-
         loading.textContent =
-
         "❌ 단어 파일을 불러오지 못했습니다.";
-
 
         message.textContent =
 
         "index.html과 wordslist.txt가 같은 폴더에 있는지 확인하세요.";
-
 
         console.error(error);
 
@@ -1502,6 +1210,12 @@ async function loadWords() {
 
 }
 
+
+/* ==========================================
+   시작
+========================================== */
+
+loadWords();
 
 </script>
 
